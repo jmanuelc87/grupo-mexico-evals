@@ -6,10 +6,6 @@
   <title>RAG eval reports</title>
   <style>
     :root { --fg: #1f2933; --muted: #616e7c; --line: #d9e2ec; --bg: #ffffff; }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) { --fg: #e4e7eb; --muted: #9aa5b1; --line: #3e4c59; --bg: #1f2933; }
-    }
-    :root[data-theme="dark"] { --fg: #e4e7eb; --muted: #9aa5b1; --line: #3e4c59; --bg: #1f2933; }
     body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; margin: 2rem; }
     h1 { font-weight: 600; }
     ul { padding-left: 1.2rem; }
@@ -22,53 +18,7 @@
   <h1>RAG eval reports</h1>
   <p class="meta">HTML reports produced by <code>tests/test_benchmark.py</code> runs.</p>
   <ul id="reports">
-    <li class="meta">Loading reports…</li>
+    <li><a href="20261012_011335.html">20261012_011335.html</a></li>
   </ul>
-
-  <script>
-    // Lists every .html file in this folder except main.html. The browser cannot list a
-    // folder from file://, so this reads the directory index that a web server returns for "./".
-    // Serve the folder with e.g. `python -m http.server` in reports/ to see the list.
-    const list = document.getElementById("reports");
-
-    function show(message) {
-      list.replaceChildren();
-      const li = document.createElement("li");
-      li.className = "meta";
-      li.textContent = message;
-      list.append(li);
-    }
-
-    async function loadReports() {
-      if (location.protocol === "file:") {
-        show("Open this page through a local web server to list the reports (e.g. python -m http.server in reports/).");
-        return;
-      }
-      try {
-        const response = await fetch("./", { cache: "no-store" });
-        if (!response.ok) throw new Error(response.status);
-        const doc = new DOMParser().parseFromString(await response.text(), "text/html");
-        const names = [...doc.querySelectorAll("a[href]")]
-          .map((a) => decodeURIComponent(a.getAttribute("href").split(/[?#]/)[0]))
-          .map((href) => href.replace(/^\.?\//, ""))
-          .filter((name) => name.endsWith(".html") && name !== "main.html" && !name.includes("/"));
-        const unique = [...new Set(names)].sort();
-        if (unique.length === 0) return show("No reports yet.");
-
-        list.replaceChildren(...unique.map((name) => {
-          const li = document.createElement("li");
-          const link = document.createElement("a");
-          link.href = encodeURI(name);
-          link.textContent = name;
-          li.append(link);
-          return li;
-        }));
-      } catch (error) {
-        show(`Could not list the reports (${error.message}).`);
-      }
-    }
-
-    loadReports();
-  </script>
 </body>
 </html>
