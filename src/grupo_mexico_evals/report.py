@@ -80,8 +80,16 @@ def _status(success: bool) -> str:
     return f'<span class="{cls}">{text}</span>'
 
 
+def _duration(value) -> str:
+    return "–" if value is None else f"{value:.1f}s"
+
+
+def _money(value) -> str:
+    return "–" if value is None else f"${value:.4f}"
+
+
 def _summary_table(cases: list[dict]) -> str:
-    """One row per model: pass rate and mean score for each metric."""
+    """One row per model: pass rate, avg time, judge cost and mean score for each metric."""
     by_model: dict[str, list[dict]] = defaultdict(list)
     for case in cases:
         by_model[split_case(case)[0]].append(case)
@@ -96,6 +104,11 @@ def _summary_table(cases: list[dict]) -> str:
     rows = []
     for model, model_cases in by_model.items():
         passed = sum(1 for c in model_cases if c["success"])
+        durations = [c["runDuration"] for c in model_cases if c.get("runDuration") is not None]
+        costs = [c["evaluationCost"] for c in model_cases if c.get("evaluationCost") is not None]
+        avg_time = sum(durations) / len(durations) if durations else None
+        total_cost = sum(costs) if costs else None
+        avg_cost = sum(costs) / len(costs) if costs else None
         cells = []
         for name in metric_names:
             scores = [
@@ -108,10 +121,15 @@ def _summary_table(cases: list[dict]) -> str:
             cells.append(f"<td>{_score(mean)}</td>")
         rows.append(
             f"<tr><td>{html.escape(model)}</td>"
-            f"<td>{passed}/{len(model_cases)}</td>{''.join(cells)}</tr>"
+            f"<td>{passed}/{len(model_cases)}</td>"
+            f"<td>{_duration(avg_time)}</td>"
+            f"<td>{_money(total_cost)}</td>"
+            f"<td>{_money(avg_cost)}</td>"
+            f"{''.join(cells)}</tr>"
         )
     return (
-        "<table><thead><tr><th>Model</th><th>Passed</th>"
+        "<table><thead><tr><th>Model</th><th>Passed</th><th>Avg time</th>"
+        "<th>Total cost</th><th>Avg cost</th>"
         f"{header}</tr></thead><tbody>{''.join(rows)}</tbody></table>"
     )
 
@@ -130,7 +148,8 @@ def _case_section(case: dict) -> str:
     )
     return (
         f"<details><summary>{_status(case['success'])} "
-        f"{html.escape(case_title(case))}</summary>"
+        f"{html.escape(case_title(case))} · {_duration(case.get('runDuration'))} · "
+        f"{_money(case.get('evaluationCost'))}</summary>"
         f"<p><b>Question:</b> {html.escape(case.get('input') or '')}</p>"
         f"<p><b>Answer:</b></p><pre>{html.escape(case.get('actualOutput') or '')}</pre>"
         "<table><thead><tr><th>Metric</th><th>Score</th><th>Threshold</th>"

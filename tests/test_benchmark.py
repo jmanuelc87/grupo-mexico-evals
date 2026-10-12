@@ -39,6 +39,7 @@ from grupo_mexico_evals.report import RESULTS_DIR, convert, latest_run
 from grupo_mexico_evals.rubrics import RUBRICS, parse_rubric
 
 GOLDENS = Path("data/usable/rh_goldens.csv")
+DOCS_DIR = Path("docs")  # where the HTML reports are written
 NUM_QUESTIONS = 7  # per model
 JUDGE_MODEL = os.environ.get(
     "EVAL_JUDGE_MODEL", "gpt-4.1"
@@ -193,7 +194,9 @@ def write_html_report(started: float) -> None:
         return  # nothing saved, e.g. plain pytest without DEEPEVAL_RESULTS_FOLDER
     if run_file.stat().st_mtime < started:
         return
-    print(f"\nHTML report: {convert(run_file)}")
+    DOCS_DIR.mkdir(exist_ok=True)
+    output = convert(run_file, DOCS_DIR / (run_file.name + ".html"))
+    print(f"\nHTML report: {output}")
 
 
 atexit.register(write_html_report, time.time())
