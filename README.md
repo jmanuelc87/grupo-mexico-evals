@@ -106,6 +106,7 @@ Evals are skipped by default (`addopts = "-m 'not eval'"` in `pyproject.toml`). 
 ```bash
 uv run rag-benchmark                                     # benchmark: every family, saves JSON + HTML report to reports/
 uv run rag-benchmark -f claude                           # benchmark: one family (openai, claude or gemini)
+uv run rag-benchmark -f claude -m claude-opus-5-5        # benchmark: one model of a family
 uv run pytest                                            # unit tests only (no API calls)
 uv run pytest -m eval -k "gpt-5.5 and not gpt-5.5-pro"   # one OpenAI model
 uv run pytest -m eval -k claude                          # one provider
@@ -116,7 +117,7 @@ EVAL_FAMILY=gemini uv run pytest -m eval                 # one family, without a
 
 `rag-benchmark` runs the benchmark through `deepeval test run` and saves its report. It sets `DEEPEVAL_RESULTS_FOLDER` to `reports/` unless that is already set, and passes any other arguments on to deepeval.
 
-deepeval writes a JSON run file to `reports/`. `test_benchmark.py` registers an `atexit` hook that converts the newest run file to an HTML report (`<run-file>.html`) in the same folder, after the process exits. It only converts files written during the current process. `deepeval test run` has no `-k` option, so `rag-benchmark` selects a family with `-f` instead; for a single model, use plain `pytest` (which does not write a run file).
+deepeval writes a JSON run file to `reports/`. `test_benchmark.py` registers an `atexit` hook that converts the newest run file to an HTML report (`<run-file>.html`) in the same folder, after the process exits. It only converts files written during the current process. `deepeval test run` has no `-k` option, so `rag-benchmark` selects a family with `-f` and a model with `-m` (which needs `-f`) instead. Plain `pytest` also works for a single model, but it does not write a run file.
 
 To convert an existing run file by hand:
 

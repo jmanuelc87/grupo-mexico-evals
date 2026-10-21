@@ -97,6 +97,7 @@ CLAUDE_MODELS = (
 # Any ID is accepted; this is for reference.
 GEMINI_MODELS = (
     # Stable
+    "gemini-4-argon",
     "gemini-3.8-flash",  # most capable Flash, for long-running coding and agents
     "gemini-3.6-flash",
     "gemini-3.5-flash-lite",  # fastest, most cost-effective 3.5 model

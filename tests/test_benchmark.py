@@ -7,6 +7,7 @@ when its API key is not set. Run it with:
     uv run pytest -m eval -k "gpt-5.5 and not gpt-5.5-pro" # one model
     uv run pytest -m eval -k claude                        # one provider
     EVAL_FAMILY=claude uv run pytest -m eval               # one family, same as the rag-benchmark switch
+    EVAL_FAMILY=claude EVAL_MODEL=claude-opus-5-5 uv run pytest -m eval  # one model of a family
 """
 
 import atexit
@@ -90,12 +91,19 @@ ALL_MODEL_SPECS = {
 FAMILY = os.environ.get("EVAL_FAMILY", "all").strip().lower()
 if FAMILY not in {"all", *ALL_MODEL_SPECS}:
     raise ValueError(f"EVAL_FAMILY must be all, openai, claude or gemini; got {FAMILY!r}")
-MODEL_SPECS = [
-    spec
-    for family, specs in ALL_MODEL_SPECS.items()
-    if FAMILY in {"all", family}
-    for spec in specs
-]
+# EVAL_MODEL narrows a family to one model ID, which need not be in the lists above.
+MODEL = os.environ.get("EVAL_MODEL", "").strip()
+if MODEL and FAMILY == "all":
+    raise ValueError("EVAL_MODEL needs EVAL_FAMILY set to openai, claude or gemini")
+if MODEL:
+    MODEL_SPECS = [f"{FAMILY}:{MODEL}"]
+else:
+    MODEL_SPECS = [
+        spec
+        for family, specs in ALL_MODEL_SPECS.items()
+        if FAMILY in {"all", family}
+        for spec in specs
+    ]
 
 
 def model_params() -> list:

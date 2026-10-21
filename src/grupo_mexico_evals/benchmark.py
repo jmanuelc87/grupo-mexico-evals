@@ -2,7 +2,8 @@
 
 deepeval only writes its run file when run through ``deepeval test run``, so this wraps that
 command and points it at the reports folder. ``--family`` limits the run to one provider's models
-(via ``EVAL_FAMILY``, read by the test file); other arguments are passed on to deepeval.
+(via ``EVAL_FAMILY``, read by the test file). ``--model`` narrows that to one model of the family
+(via ``EVAL_MODEL``). Other arguments are passed on to deepeval.
 """
 
 from __future__ import annotations
@@ -29,12 +30,20 @@ def main(argv: list[str] | None = None) -> int:
         default="all",
         help="model family to run (default: %(default)s)",
     )
+    parser.add_argument(
+        "-m",
+        "--model",
+        help="one model of the family, e.g. claude-opus-5-5 (needs -f)",
+    )
     args, deepeval_args = parser.parse_known_args(argv)
+    if args.model and args.family == "all":
+        parser.error("--model needs a family: pass -f openai, claude or gemini")
 
     RESULTS_DIR.mkdir(exist_ok=True)
     env = dict(os.environ)
     env.setdefault("DEEPEVAL_RESULTS_FOLDER", str(RESULTS_DIR))
     env["EVAL_FAMILY"] = args.family
+    env["EVAL_MODEL"] = args.model or ""
     cmd = ["deepeval", "test", "run", BENCHMARK_FILE, "-m", "eval", *deepeval_args]
     return subprocess.run(cmd, env=env).returncode
 
